@@ -1,8 +1,9 @@
 use num_bigint::BigUint;
+use num_integer::Integer;
 use num_traits::{One, Zero};
 use rand::{RngExt, rng};
 
-use crate::constant::SMALL_PRIMES;
+use crate::constant::{SMALL_PRIMES, e};
 
 fn random_bits(bits: u64) -> BigUint {
     let mut rng = rng();
@@ -103,6 +104,10 @@ pub fn generate_prime(bits: u64) -> BigUint {
             continue;
         }
 
+        let p_minus_1 = &candidate - BigUint::one();
+        if p_minus_1.gcd(&e()) != BigUint::one() {
+            continue;
+        }
         return candidate;
     }
 }

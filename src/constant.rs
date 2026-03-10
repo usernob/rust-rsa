@@ -1,3 +1,11 @@
+use num_bigint::BigUint;
+
+pub fn e() -> BigUint {
+    // value from chatgpt suggestion
+    // but suprissingly meet the equation gcd(e, phi) = 1
+    BigUint::from(65537u32)
+}
+
 /// ref: https://en.wikipedia.org/wiki/List_of_prime_numbers#The_first_1,000_prime_numbers
 pub static SMALL_PRIMES: [u64; 1000] = [
     2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
