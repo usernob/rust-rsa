@@ -111,3 +111,24 @@ pub fn generate_prime(bits: u64) -> BigUint {
         return candidate;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn miller_rabin_true() {
+        let a = BigUint::from(SMALL_PRIMES[999]);
+        let b = BigUint::from(SMALL_PRIMES[100]);
+        assert_eq!(miller_rabin(&a, 40), true);
+        assert_eq!(miller_rabin(&b, 40), true);
+    }
+
+    #[test]
+    fn miller_rabin_false() {
+        let a = BigUint::from(10u8);
+        let b = BigUint::from(2048u32);
+        assert_eq!(miller_rabin(&a, 40), false);
+        assert_eq!(miller_rabin(&b, 40), false);
+    }
+}
