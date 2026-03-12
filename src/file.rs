@@ -7,7 +7,7 @@ use num_bigint::BigUint;
 
 use crate::{
     constant::{CHUNK_WITDH, PRIVATE_HEADER, PUBLIC_HEADER, SEPARATOR},
-    rsa::KeyPair,
+    rsa::{KeyPair, keygen},
 };
 
 fn wrap_write<W: Write>(writer: &mut W, s: &str) -> io::Result<()> {
@@ -89,7 +89,7 @@ fn read(path: &str, header: &str) -> io::Result<(BigUint, BigUint)> {
     Ok((a, b))
 }
 
-pub fn save_key(filename: &str, key: KeyPair) -> io::Result<()> {
+pub fn save_key(filename: &str, key: &KeyPair) -> io::Result<()> {
     let public_path: String = format!("{}.pub", filename);
     let private_path: &str = filename;
     write(&public_path, PUBLIC_HEADER, &key.n, &key.e)?;
@@ -103,4 +103,12 @@ pub fn read_key(filename: &str) -> io::Result<KeyPair> {
     let (_n, e) = read(&public_path, PUBLIC_HEADER)?;
     let (n, d) = read(&private_path, PRIVATE_HEADER)?;
     Ok(KeyPair { n, e, d })
+}
+
+#[test]
+fn save_read_key() {
+    let generated_key = keygen::generate(1024);
+    save_key("/tmp/test", &generated_key).unwrap();
+    let loaded_key = read_key("/tmp/test").unwrap();
+    assert_eq!(generated_key, loaded_key);
 }

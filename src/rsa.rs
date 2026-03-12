@@ -9,6 +9,12 @@ pub struct KeyPair {
     pub d: BigUint,
 }
 
+impl PartialEq for KeyPair {
+    fn eq(&self, other: &Self) -> bool {
+        self.n == other.n && self.e == other.e && self.d == other.d
+    }
+}
+
 pub mod keygen {
     use num_bigint::{BigInt, BigUint};
     use num_integer::{ExtendedGcd, Integer};
