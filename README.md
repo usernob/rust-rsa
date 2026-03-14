@@ -14,7 +14,7 @@ The goal of this project is educational: demonstrating how RSA works internally,
 
 ---
 
-# Build
+## Build
 
 Requirements:
 
@@ -47,7 +47,7 @@ cargo install --path .
 
 ---
 
-# Command Overview
+## Command Overview
 
 ```text
 rust-rsa keygen
@@ -57,7 +57,7 @@ rust-rsa decrypt
 
 ---
 
-# Key Generation
+## Key Generation
 
 Generate a new RSA keypair.
 
@@ -86,7 +86,7 @@ rust-rsa keygen -o mykey -b 4096
 
 ---
 
-# Encryption
+## Encryption
 
 Encrypt a file using a **public key**.
 
@@ -104,7 +104,7 @@ message.enc   encrypted output
 
 ---
 
-# Decryption
+## Decryption
 
 Decrypt a ciphertext using the **private key**.
 
@@ -114,7 +114,7 @@ rust-rsa decrypt message.enc -k mykey -o message.txt
 
 ---
 
-# Using Pipes (stdin / stdout)
+## Using Pipes (stdin / stdout)
 
 The program supports UNIX pipes.
 
@@ -132,7 +132,7 @@ cat message.enc | rust-rsa decrypt -k mykey > message.txt
 
 ---
 
-# Ciphertext File Format
+## Ciphertext File Format
 
 Ciphertext is stored as a **binary stream of fixed-size RSA blocks**.
 
@@ -163,7 +163,7 @@ Because ciphertext blocks always have a fixed size, decryption simply reads `k` 
 
 ---
 
-# How Encryption Works
+## How Encryption Works
 
 Steps performed by the program:
 
@@ -202,7 +202,7 @@ output
 
 ---
 
-# How Decryption Works
+## How Decryption Works
 
 Steps:
 
@@ -233,7 +233,7 @@ output
 
 ---
 
-# RSA Key Structure
+## RSA Key Structure
 
 RSA uses two keys.
 
@@ -269,7 +269,7 @@ m = c^d mod n
 
 ---
 
-# Limitations
+## Limitations
 
 This implementation intentionally keeps RSA simple.
 
@@ -290,7 +290,7 @@ Digital signatures (RSA-PSS)
 
 ---
 
-# Example Workflow
+## Example Workflow
 
 Generate a keypair:
 
@@ -313,7 +313,7 @@ rust-rsa decrypt file.enc -k testkey -o file.txt
 ---
 
 
-# Purpose of the Project
+## Purpose of the Project
 
 This project is designed to demonstrate:
 

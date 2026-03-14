@@ -41,6 +41,7 @@ enum Commands {
         input: Option<String>,
     },
 }
+
 fn main() -> std::io::Result<()> {
     let cli = Cli::parse();
 
