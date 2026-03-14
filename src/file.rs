@@ -1,13 +1,13 @@
 use std::{
     fs::File,
-    io::{self, BufRead, BufReader, BufWriter, Write},
+    io::{self, BufRead, BufReader, BufWriter, Read, Write},
 };
 
 use num_bigint::BigUint;
 
 use crate::{
     constant::{CHUNK_WITDH, PRIVATE_HEADER, PUBLIC_HEADER, SEPARATOR},
-    rsa::{self, KeyPair},
+    rsa,
 };
 
 fn wrap_write<W: Write>(writer: &mut W, s: &str) -> io::Result<()> {
@@ -89,20 +89,50 @@ fn read(path: &str, header: &str) -> io::Result<(BigUint, BigUint)> {
     Ok((a, b))
 }
 
-pub fn save_key(filename: &str, key: &KeyPair) -> io::Result<()> {
+pub fn save_key(filename: &str, key: &rsa::KeyPair) -> io::Result<()> {
     let public_path: String = format!("{}.pub", filename);
     let private_path: &str = filename;
-    write(&public_path, PUBLIC_HEADER, &key.n, &key.e)?;
-    write(&private_path, PRIVATE_HEADER, &key.n, &key.d)?;
+    let private_key: &rsa::PrivateKey = key.private();
+    let public_key: &rsa::PublicKey = key.public();
+    write(&public_path, PUBLIC_HEADER, &public_key.n, &public_key.e)?;
+    write(
+        &private_path,
+        PRIVATE_HEADER,
+        &private_key.n,
+        &private_key.d,
+    )?;
     Ok(())
 }
 
-pub fn read_key(filename: &str) -> io::Result<KeyPair> {
-    let public_path: String = format!("{}.pub", filename);
-    let private_path: &str = filename;
-    let (_n, e) = read(&public_path, PUBLIC_HEADER)?;
-    let (n, d) = read(&private_path, PRIVATE_HEADER)?;
-    Ok(KeyPair { n, e, d })
+pub fn read_public_key(filename: &str) -> io::Result<rsa::PublicKey> {
+    let (n, e) = read(filename, PUBLIC_HEADER)?;
+    Ok(rsa::PublicKey { n, e })
+}
+
+pub fn read_private_key(filename: &str) -> io::Result<rsa::PrivateKey> {
+    let (n, d) = read(filename, PRIVATE_HEADER)?;
+    Ok(rsa::PrivateKey { n, d })
+}
+
+pub fn read_key(filename: &str) -> io::Result<rsa::KeyPair> {
+    let pub_path = format!("{}.pub", filename);
+    let public: rsa::PublicKey = read_public_key(&pub_path)?;
+    let private: rsa::PrivateKey = read_private_key(filename)?;
+    Ok(rsa::KeyPair::new(public.n, public.e, private.d))
+}
+
+pub fn open_input(path: Option<&str>) -> io::Result<Box<dyn Read>> {
+    match path {
+        Some(p) => Ok(Box::new(BufReader::new(File::open(p)?))),
+        None => Ok(Box::new(BufReader::new(io::stdin()))),
+    }
+}
+
+pub fn open_output(path: Option<&str>) -> io::Result<Box<dyn Write>> {
+    match path {
+        Some(p) => Ok(Box::new(BufWriter::new(File::create(p)?))),
+        None => Ok(Box::new(BufWriter::new(io::stdout()))),
+    }
 }
 
 #[cfg(test)]

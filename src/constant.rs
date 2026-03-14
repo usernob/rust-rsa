@@ -71,7 +71,7 @@ pub static SMALL_PRIMES: [u64; 1000] = [
     7853, 7867, 7873, 7877, 7879, 7883, 7901, 7907, 7919,
 ];
 
-pub const CHUNK_WITDH: usize = 40;
-pub static SEPARATOR: &str = "========================================";
+pub const CHUNK_WITDH: usize = 64;
+pub static SEPARATOR: &str = "================================================================";
 pub static PUBLIC_HEADER: &str =  "RSA PUBLIC KEY V1";
 pub static PRIVATE_HEADER: &str =  "RSA PRIVATE KEY V1";

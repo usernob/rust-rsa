@@ -1,7 +1,6 @@
 mod constant;
+mod file;
 mod prime_number;
 mod rsa;
-mod file;
 
-fn main() {
-}
+fn main() {}
