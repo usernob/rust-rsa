@@ -1,4 +1,7 @@
-use clap::{Parser, Subcommand};
+use std::io;
+
+use clap::{CommandFactory, Parser, Subcommand, ValueHint};
+use clap_complete::{Shell, generate};
 
 mod constant;
 mod file;
@@ -8,13 +11,17 @@ mod rsa;
 #[derive(Parser)]
 struct Cli {
     #[command(subcommand)]
-    pub command: Commands,
+    command: Commands,
 }
 
 #[derive(Subcommand)]
 enum Commands {
+    GenCompletion {
+        #[arg(value_name = "SHELL")]
+        shell: Shell,
+    },
     Keygen {
-        #[arg(short, long)]
+        #[arg(short, long, value_hint = ValueHint::FilePath)]
         output: String,
 
         #[arg(short, long, default_value = "1024")]
@@ -22,22 +29,24 @@ enum Commands {
     },
 
     Encrypt {
-        #[arg(short, long)]
+        #[arg(short, long, value_hint = ValueHint::FilePath)]
         key: String,
 
-        #[arg(short, long)]
+        #[arg(short, long, value_hint = ValueHint::FilePath)]
         output: Option<String>,
 
+        #[arg(value_hint = ValueHint::FilePath)]
         input: Option<String>,
     },
 
     Decrypt {
-        #[arg(short, long)]
+        #[arg(short, long, value_hint = ValueHint::FilePath)]
         key: String,
 
-        #[arg(short, long)]
+        #[arg(short, long, value_hint = ValueHint::FilePath)]
         output: Option<String>,
 
+        #[arg(value_hint = ValueHint::FilePath)]
         input: Option<String>,
     },
 }
@@ -59,6 +68,13 @@ fn main() -> std::io::Result<()> {
         Commands::Decrypt { key, input, output } => {
             let privkey = file::read_private_key(&key)?;
             rsa::process_decrypt(input.as_deref(), output.as_deref(), &privkey)?;
+        }
+
+        Commands::GenCompletion { shell } => {
+            let mut cmd = Cli::command();
+            let name = cmd.get_name().to_string();
+
+            generate(shell, &mut cmd, name, &mut io::stdout());
         }
     }
 
