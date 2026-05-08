@@ -1,4 +1,4 @@
-use std::io;
+use std::io::{self};
 
 use clap::{CommandFactory, Parser, Subcommand, ValueHint};
 use clap_complete::{Shell, generate};
@@ -62,12 +62,20 @@ fn main() -> std::io::Result<()> {
 
         Commands::Encrypt { key, input, output } => {
             let pubkey = file::read_public_key(&key)?;
-            rsa::process_encrypt(input.as_deref(), output.as_deref(), &pubkey)?;
+
+            let mut input_buf = file::open_input(input.as_deref())?;
+            let mut output_buf = file::open_output(output.as_deref())?;
+
+            rsa::process_encrypt(&mut input_buf, &mut output_buf, &pubkey)?;
         }
 
         Commands::Decrypt { key, input, output } => {
             let privkey = file::read_private_key(&key)?;
-            rsa::process_decrypt(input.as_deref(), output.as_deref(), &privkey)?;
+
+            let mut input_buf = file::open_input(input.as_deref())?;
+            let mut output_buf = file::open_output(output.as_deref())?;
+
+            rsa::process_decrypt(&mut input_buf, &mut output_buf, &privkey)?;
         }
 
         Commands::GenCompletion { shell } => {

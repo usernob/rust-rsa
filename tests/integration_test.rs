@@ -6,8 +6,7 @@ fn get_bin() -> String {
     env!("CARGO_BIN_EXE_rust-rsa").to_string()
 }
 
-#[test]
-fn test_cli_keygen_encrypt_decrypt() {
+fn cli_keygen_encrypt_decrypt(input_str: &str) {
     let bin = get_bin();
     let tmp_dir = env::temp_dir();
     let pid = std::process::id();
@@ -15,16 +14,11 @@ fn test_cli_keygen_encrypt_decrypt() {
     let key_prefix = tmp_dir.join(format!("int_key_{}", pid));
     let key_str = key_prefix.to_str().unwrap();
 
-    let input_path = tmp_dir.join(format!("int_input_{}.txt", pid));
     let enc_path = tmp_dir.join(format!("int_enc_{}.bin", pid));
     let dec_path = tmp_dir.join(format!("int_dec_{}.txt", pid));
 
-    let input_str = input_path.to_str().unwrap();
     let enc_str = enc_path.to_str().unwrap();
     let dec_str = dec_path.to_str().unwrap();
-
-    let msg = b"Integration test secret message.";
-    fs::write(input_str, msg).unwrap();
 
     // 1. Keygen
     let status = Command::new(&bin)
@@ -35,7 +29,7 @@ fn test_cli_keygen_encrypt_decrypt() {
         .arg("512")
         .status()
         .expect("Failed to execute keygen");
-    assert!(status.success());
+    assert!(status.success(), "Keygen return error");
 
     // 2. Encrypt
     let status = Command::new(&bin)
@@ -47,7 +41,7 @@ fn test_cli_keygen_encrypt_decrypt() {
         .arg(enc_str)
         .status()
         .expect("Failed to execute encrypt");
-    assert!(status.success());
+    assert!(status.success(), "Encrypt return error");
 
     // 3. Decrypt
     let status = Command::new(&bin)
@@ -59,16 +53,23 @@ fn test_cli_keygen_encrypt_decrypt() {
         .arg(dec_str)
         .status()
         .expect("Failed to execute decrypt");
-    assert!(status.success());
+    assert!(status.success(), "Decrypt return error");
 
     // Check if decrypted matches original
+    let msg = fs::read(input_str).expect("Failed to read original file");
     let decrypted_msg = fs::read(dec_str).expect("Failed to read decrypted file");
-    assert_eq!(msg.to_vec(), decrypted_msg);
+    assert_eq!(msg, decrypted_msg);
 
     // cleanup
     let _ = fs::remove_file(format!("{}.pub", key_str));
     let _ = fs::remove_file(key_str);
-    let _ = fs::remove_file(input_str);
     let _ = fs::remove_file(enc_str);
     let _ = fs::remove_file(dec_str);
+}
+
+
+#[test]
+fn test_cli() {
+    cli_keygen_encrypt_decrypt("tests/lorem.txt");
+    cli_keygen_encrypt_decrypt("tests/integration_test.rs");
 }

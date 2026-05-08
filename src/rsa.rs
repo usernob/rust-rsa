@@ -1,10 +1,13 @@
-use std::fmt::Debug;
+use std::{
+    fmt::Debug,
+    io::{BufRead, Write},
+};
 
 use num_bigint::{BigInt, BigUint};
 use num_integer::{ExtendedGcd, Integer};
 use num_traits::{One, Signed};
 
-use crate::{constant::e, file, prime_number, rsa};
+use crate::{constant::e, prime_number, rsa};
 
 #[derive(Debug)]
 pub struct PrivateKey {
@@ -95,13 +98,10 @@ pub fn decrypt(buf: &BigUint, key: &PrivateKey) -> Vec<u8> {
 }
 
 pub fn process_encrypt(
-    input_path: Option<&str>,
-    output_path: Option<&str>,
+    input: &mut impl BufRead,
+    output: &mut impl Write,
     key: &PublicKey,
 ) -> std::io::Result<()> {
-    let mut input = file::open_input(input_path)?;
-    let mut output = file::open_output(output_path)?;
-
     let k: usize = ((key.n.bits() + 7) / 8) as usize;
     let max_chunk = k - 2; // Reserve 1 byte for the 0x01 padding marker
     let mut buf: Vec<u8> = vec![0u8; max_chunk];
@@ -131,13 +131,10 @@ pub fn process_encrypt(
 }
 
 pub fn process_decrypt(
-    input_path: Option<&str>,
-    output_path: Option<&str>,
+    input: &mut impl BufRead,
+    output: &mut impl Write,
     key: &PrivateKey,
 ) -> std::io::Result<()> {
-    let mut input = file::open_input(input_path)?;
-    let mut output = file::open_output(output_path)?;
-
     let k: usize = ((key.n.bits() + 7) / 8) as usize;
     let mut buf: Vec<u8> = vec![0u8; k];
     loop {
@@ -148,7 +145,7 @@ pub fn process_decrypt(
         }
         let cipher: BigUint = BigUint::from_bytes_be(&buf);
         let mut msg: Vec<u8> = rsa::decrypt(&cipher, key);
-        
+
         // Remove the 0x01 padding marker
         if !msg.is_empty() && msg[0] == 0x01 {
             msg.remove(0);
@@ -165,26 +162,9 @@ pub fn process_decrypt(
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        env,
-        fs::{self, File},
-        io::Read,
-    };
+    use std::io::{BufReader, Cursor};
 
     use super::*;
-
-    fn file_eq(a: &str, b: &str) -> std::io::Result<bool> {
-        let mut f1 = File::open(a)?;
-        let mut f2 = File::open(b)?;
-
-        let mut buf1 = Vec::new();
-        let mut buf2 = Vec::new();
-
-        f1.read_to_end(&mut buf1)?;
-        f2.read_to_end(&mut buf2)?;
-
-        Ok(buf1 == buf2)
-    }
 
     #[test]
     fn test_core_encrypt_decrypt() {
@@ -192,36 +172,24 @@ mod tests {
         let msg = b"hello rsa";
         let cipher = encrypt(msg, key.public());
         let decrypted = decrypt(&cipher, key.private());
-        assert_eq!(msg.to_vec(), decrypted);
+        assert_eq!(msg, decrypted.as_slice());
     }
 
     #[test]
     pub fn test_process_encrypt_decrypt() {
         let key = keygen(512);
 
-        let mut tmp_dir = env::temp_dir();
-        let pid = std::process::id();
-
-        let input_path = tmp_dir.join(format!("test_input_{}.txt", pid));
-        let enc_path = tmp_dir.join(format!("test_enc_{}.bin", pid));
-        let dec_path = tmp_dir.join(format!("test_dec_{}.txt", pid));
-
-        let input_str = input_path.to_str().unwrap();
-        let enc_str = enc_path.to_str().unwrap();
-        let dec_str = dec_path.to_str().unwrap();
-
         let original_msg =
             b"This is a secret message to test the process_encrypt and process_decrypt functions.";
-        fs::write(input_str, original_msg).unwrap();
 
-        process_encrypt(Some(input_str), Some(enc_str), key.public()).unwrap();
-        process_decrypt(Some(enc_str), Some(dec_str), key.private()).unwrap();
+        let mut input = BufReader::new(Cursor::new(original_msg));
+        let mut chiper_msg = Vec::new();
+        process_encrypt(&mut input, &mut chiper_msg, &key.public()).unwrap();
 
-        let same = file_eq(input_str, dec_str).unwrap();
-        assert!(same, "files are different");
+        let mut chiper_input = BufReader::new(Cursor::new(&mut chiper_msg));
+        let mut output = Vec::new();
+        process_decrypt(&mut chiper_input, &mut output, key.private()).unwrap();
 
-        let _ = fs::remove_file(input_str);
-        let _ = fs::remove_file(enc_str);
-        let _ = fs::remove_file(dec_str);
+        assert_eq!(original_msg, output.as_slice());
     }
 }

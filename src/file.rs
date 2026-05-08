@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{self, BufRead, BufReader, BufWriter, Read, Write},
+    io::{self, BufRead, BufReader, BufWriter, Write},
 };
 
 use num_bigint::BigUint;
@@ -121,17 +121,17 @@ pub fn read_key(filename: &str) -> io::Result<rsa::KeyPair> {
     Ok(rsa::KeyPair::new(public.n, public.e, private.d))
 }
 
-pub fn open_input(path: Option<&str>) -> io::Result<Box<dyn Read>> {
+pub fn open_input(path: Option<&str>) -> io::Result<Box<dyn BufRead>> {
     match path {
         Some(p) => Ok(Box::new(BufReader::new(File::open(p)?))),
-        None => Ok(Box::new(BufReader::new(io::stdin()))),
+        None => Ok(Box::new(BufReader::new(io::stdin().lock()))),
     }
 }
 
 pub fn open_output(path: Option<&str>) -> io::Result<Box<dyn Write>> {
     match path {
         Some(p) => Ok(Box::new(BufWriter::new(File::create(p)?))),
-        None => Ok(Box::new(BufWriter::new(io::stdout()))),
+        None => Ok(Box::new(BufWriter::new(io::stdout().lock()))),
     }
 }
 
