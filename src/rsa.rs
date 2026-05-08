@@ -103,7 +103,8 @@ pub fn process_encrypt(
     let mut output = file::open_output(output_path)?;
 
     let k: usize = ((key.n.bits() + 7) / 8) as usize;
-    let mut buf: Vec<u8> = vec![0u8; k - 1];
+    let max_chunk = k - 2; // Reserve 1 byte for the 0x01 padding marker
+    let mut buf: Vec<u8> = vec![0u8; max_chunk];
 
     loop {
         buf.fill(0u8);
@@ -111,7 +112,12 @@ pub fn process_encrypt(
         if n == 0 {
             break;
         }
-        let c: BigUint = rsa::encrypt(&buf[..n], key);
+
+        // Simple Padding: Prepend 0x01 to preserve leading zeroes
+        let mut padded_plain = vec![0x01];
+        padded_plain.extend_from_slice(&buf[..n]);
+
+        let c: BigUint = rsa::encrypt(&padded_plain, key);
         let mut cipher: Vec<u8> = c.to_bytes_be();
         if cipher.len() < k {
             let mut padded: Vec<u8> = vec![0u8; k - cipher.len()];
@@ -141,7 +147,16 @@ pub fn process_decrypt(
             Err(e) => return Err(e),
         }
         let cipher: BigUint = BigUint::from_bytes_be(&buf);
-        let msg: Vec<u8> = rsa::decrypt(&cipher, key);
+        let mut msg: Vec<u8> = rsa::decrypt(&cipher, key);
+        
+        // Remove the 0x01 padding marker
+        if !msg.is_empty() && msg[0] == 0x01 {
+            msg.remove(0);
+        } else if !msg.is_empty() {
+            // Fallback if decryption succeeded but marker is wrong (corrupted)
+            msg.remove(0);
+        }
+
         output.write_all(&msg)?;
     }
     output.flush()?;
