@@ -11,14 +11,14 @@ fn test_cli_keygen_encrypt_decrypt() {
     let bin = get_bin();
     let tmp_dir = env::temp_dir();
     let pid = std::process::id();
-    
+
     let key_prefix = tmp_dir.join(format!("int_key_{}", pid));
     let key_str = key_prefix.to_str().unwrap();
-    
+
     let input_path = tmp_dir.join(format!("int_input_{}.txt", pid));
     let enc_path = tmp_dir.join(format!("int_enc_{}.bin", pid));
     let dec_path = tmp_dir.join(format!("int_dec_{}.txt", pid));
-    
+
     let input_str = input_path.to_str().unwrap();
     let enc_str = enc_path.to_str().unwrap();
     let dec_str = dec_path.to_str().unwrap();

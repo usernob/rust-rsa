@@ -4,10 +4,7 @@ use num_bigint::{BigInt, BigUint};
 use num_integer::{ExtendedGcd, Integer};
 use num_traits::{One, Signed};
 
-use crate::{
-    constant::e,
-    file, prime_number, rsa,
-};
+use crate::{constant::e, file, prime_number, rsa};
 
 #[derive(Debug)]
 pub struct PrivateKey {
@@ -153,7 +150,11 @@ pub fn process_decrypt(
 
 #[cfg(test)]
 mod tests {
-    use std::{env, fs::{self, File}, io::Read};
+    use std::{
+        env,
+        fs::{self, File},
+        io::Read,
+    };
 
     use super::*;
 
@@ -182,19 +183,20 @@ mod tests {
     #[test]
     pub fn test_process_encrypt_decrypt() {
         let key = keygen(512);
-        
+
         let mut tmp_dir = env::temp_dir();
         let pid = std::process::id();
-        
+
         let input_path = tmp_dir.join(format!("test_input_{}.txt", pid));
         let enc_path = tmp_dir.join(format!("test_enc_{}.bin", pid));
         let dec_path = tmp_dir.join(format!("test_dec_{}.txt", pid));
-        
+
         let input_str = input_path.to_str().unwrap();
         let enc_str = enc_path.to_str().unwrap();
         let dec_str = dec_path.to_str().unwrap();
 
-        let original_msg = b"This is a secret message to test the process_encrypt and process_decrypt functions.";
+        let original_msg =
+            b"This is a secret message to test the process_encrypt and process_decrypt functions.";
         fs::write(input_str, original_msg).unwrap();
 
         process_encrypt(Some(input_str), Some(enc_str), key.public()).unwrap();
