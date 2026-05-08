@@ -138,11 +138,20 @@ pub fn open_output(path: Option<&str>) -> io::Result<Box<dyn Write>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
+
     #[test]
     fn save_read_key() {
-        let generated_key = rsa::keygen(1024);
-        save_key("/tmp/test", &generated_key).unwrap();
-        let loaded_key = read_key("/tmp/test").unwrap();
+        let generated_key = rsa::keygen(512);
+        let mut tmp_path = env::temp_dir();
+        tmp_path.push(format!("test_key_{}", std::process::id()));
+        let path_str = tmp_path.to_str().unwrap();
+
+        save_key(path_str, &generated_key).unwrap();
+        let loaded_key = read_key(path_str).unwrap();
         assert_eq!(generated_key, loaded_key);
+
+        let _ = std::fs::remove_file(format!("{}.pub", path_str));
+        let _ = std::fs::remove_file(path_str);
     }
 }

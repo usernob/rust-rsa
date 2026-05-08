@@ -131,4 +131,11 @@ mod tests {
         assert_eq!(miller_rabin(&a, 40), false);
         assert_eq!(miller_rabin(&b, 40), false);
     }
+
+    #[test]
+    fn test_generate_prime() {
+        let p = generate_prime(64);
+        assert!(miller_rabin(&p, 40));
+        assert!(trial_division(&p));
+    }
 }

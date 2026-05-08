@@ -153,7 +153,7 @@ pub fn process_decrypt(
 
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, io::Read};
+    use std::{env, fs::{self, File}, io::Read};
 
     use super::*;
 
@@ -171,12 +171,40 @@ mod tests {
     }
 
     #[test]
-    pub fn test_encrypt_decrypt() {
-        let pub_key = file::read_public_key("/tmp/test.pub").unwrap();
-        let priv_key = file::read_private_key("/tmp/test").unwrap();
-        rsa::process_encrypt(Some("lorem.txt"), Some("/tmp/msg.enc"), &pub_key).unwrap();
-        rsa::process_decrypt(Some("/tmp/msg.enc"), Some("/tmp/msg.txt"), &priv_key).unwrap();
-        let same = file_eq("lorem.txt", "/tmp/msg.txt").unwrap();
+    fn test_core_encrypt_decrypt() {
+        let key = keygen(256);
+        let msg = b"hello rsa";
+        let cipher = encrypt(msg, key.public());
+        let decrypted = decrypt(&cipher, key.private());
+        assert_eq!(msg.to_vec(), decrypted);
+    }
+
+    #[test]
+    pub fn test_process_encrypt_decrypt() {
+        let key = keygen(512);
+        
+        let mut tmp_dir = env::temp_dir();
+        let pid = std::process::id();
+        
+        let input_path = tmp_dir.join(format!("test_input_{}.txt", pid));
+        let enc_path = tmp_dir.join(format!("test_enc_{}.bin", pid));
+        let dec_path = tmp_dir.join(format!("test_dec_{}.txt", pid));
+        
+        let input_str = input_path.to_str().unwrap();
+        let enc_str = enc_path.to_str().unwrap();
+        let dec_str = dec_path.to_str().unwrap();
+
+        let original_msg = b"This is a secret message to test the process_encrypt and process_decrypt functions.";
+        fs::write(input_str, original_msg).unwrap();
+
+        process_encrypt(Some(input_str), Some(enc_str), key.public()).unwrap();
+        process_decrypt(Some(enc_str), Some(dec_str), key.private()).unwrap();
+
+        let same = file_eq(input_str, dec_str).unwrap();
         assert!(same, "files are different");
+
+        let _ = fs::remove_file(input_str);
+        let _ = fs::remove_file(enc_str);
+        let _ = fs::remove_file(dec_str);
     }
 }
