@@ -1,6 +1,6 @@
 # Rust RSA
 
-[![demo](./demo.gif)](https://asciinema.org/a/kSTPpraE9E0ZSher)
+[![demo](./demo.gif)](https://asciinema.org/a/P4LoC6ALlcKaUwct)
 
 A minimalistic command-line tool implementing a **basic RSA encryption and decryption workflow**, written entirely in Rust. 
 
